@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oasis Hollandale — Furnishing Budget</title>
+<style>
+  :root{
+    --ink:#1c1c1a;
+    --paper:#faf8f4;
+    --line:#ddd7cb;
+    --accent:#5b6b4f;
+    --accent-soft:#e7ebe1;
+    --low:#8a8f7a;
+    --mid:#5b6b4f;
+    --high:#3d4a35;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Georgia','Times New Roman',serif;
+    -webkit-font-smoothing:antialiased;padding-bottom:70px;
+  }
+  header{padding:24px 18px 16px;border-bottom:2px solid var(--ink);}
+  header h1{font-size:1.4rem;margin:0 0 4px;}
+  header .sub{font-family:Arial,sans-serif;font-size:0.78rem;color:#555;line-height:1.5;}
+
+  .savebar{
+    position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;
+    font-family:Arial,sans-serif;font-size:0.7rem;padding:6px 18px;text-align:center;opacity:0.9;
+  }
+
+  .notice{
+    margin:14px 18px;padding:12px 14px;background:var(--accent-soft);
+    border-left:3px solid var(--accent);font-family:Arial,sans-serif;
+    font-size:0.8rem;line-height:1.55;color:#333;
+  }
+  .notice b{color:var(--accent);}
+  .legend{
+    display:flex;gap:14px;padding:0 18px 6px;font-family:Arial,sans-serif;
+    font-size:0.72rem;color:#666;flex-wrap:wrap;
+  }
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .dot.low{background:var(--low);}
+  .dot.mid{background:var(--mid);}
+  .dot.high{background:var(--high);}
+
+  .room{
+    margin:24px 18px 10px;font-family:Arial,sans-serif;font-size:0.68rem;
+    letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);
+    border-bottom:1px solid var(--line);padding-bottom:6px;
+  }
+
+  .item{margin:0 18px 14px;border:1px solid var(--line);background:#fff;padding:12px 14px;}
+  .item.excluded{opacity:0.45;}
+  .item.altpair{border-left:3px solid var(--accent);}
+  .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px;}
+  .item-name{font-size:1rem;}
+  .item-name .qty{font-family:Arial,sans-serif;font-size:0.7rem;color:#888;display:block;margin-top:2px;}
+  .item-note{font-family:Arial,sans-serif;font-size:0.7rem;color:#8a7a5c;margin:0 0 10px;}
+  .need-toggle{
+    font-family:Arial,sans-serif;font-size:0.7rem;display:flex;align-items:center;gap:6px;
+    white-space:nowrap;color:#555;cursor:pointer;
+  }
+  .need-toggle input{transform:scale(1.15);accent-color:var(--accent);}
+
+  .tiers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+  .tier{border:1px solid var(--line);padding:8px 5px;text-align:center;cursor:pointer;font-family:Arial,sans-serif;transition:all .15s;}
+  .tier .lbl{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.04em;color:#999;margin-bottom:3px;}
+  .tier .val{font-size:0.9rem;color:var(--ink);}
+  .tier.sel-low{background:var(--low);border-color:var(--low);}
+  .tier.sel-mid{background:var(--mid);border-color:var(--mid);}
+  .tier.sel-high{background:var(--high);border-color:var(--high);}
+  .tier.sel-low .lbl,.tier.sel-mid .lbl,.tier.sel-high .lbl,
+  .tier.sel-low .val,.tier.sel-mid .val,.tier.sel-high .val{color:#fff;}
+
+  .summary{margin:28px 18px 0;border:2px solid var(--ink);background:#fff;}
+  .summary h2{font-size:0.95rem;margin:0;padding:12px 14px;border-bottom:2px solid var(--ink);}
+  .sum-row{display:flex;justify-content:space-between;padding:9px 14px;font-family:Arial,sans-serif;font-size:0.82rem;border-bottom:1px solid var(--line);}
+  .sum-row .n{font-variant-numeric:tabular-nums;}
+  .picked-total{display:flex;justify-content:space-between;padding:14px;font-family:Arial,sans-serif;background:var(--ink);color:#fff;}
+  .picked-total .n{font-size:1.3rem;font-variant-numeric:tabular-nums;}
+
+  .footnote{margin:16px 18px 0;font-family:Arial,sans-serif;font-size:0.72rem;color:#888;line-height:1.6;}
+
+  .actions{margin:20px 18px 0;display:flex;gap:8px;}
+  .btn{
+    flex:1;padding:11px;font-family:Arial,sans-serif;font-size:0.75rem;
+    text-align:center;cursor:pointer;border:1px solid var(--ink);background:none;color:var(--ink);
+  }
+  .btn.primary{background:var(--ink);color:#fff;}
+  .status{font-family:Arial,sans-serif;font-size:0.68rem;color:#999;text-align:center;margin-top:8px;height:14px;}
+
+  .exportbox{
+    margin:14px 18px 0;display:none;
+  }
+  .exportbox textarea{
+    width:100%;height:220px;font-family:'Courier New',monospace;font-size:0.72rem;
+    padding:10px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="savebar" id="savebar">загрузка...</div>
+
+<header>
+  <h1>Oasis, Hollandale — 1BR Furnishing</h1>
+  <div class="sub">Residence A1-06 · Closing 09/06 · Клиент: Серёжа · Доставка до 3 сентября · Стена/дверь в Ден (доп. комната) — отдельно, замер и смета после приезда мастера</div>
+</header>
+
+<div class="notice">
+  Low — реальные цены, по которым это можно купить. Mid — нормальная цена в обычном магазине (недорого, но не редкость). Modern Miami — более статусный вариант.<br>
+  <b>Окна:</b> для гостиной и спальни есть 2 варианта покрытия — обычные <b>шторы</b> или <b>ролеты/жалюзи blackout</b> (механические или электрические с пультом). Выбери по одному варианту на комнату — не оба.<br>
+  <b>Опция:</b> обеденный стол — по умолчанию выключен, включи галочку «нужно», если хочешь его добавить.
+</div>
+
+<div class="legend">
+  <span><i class="dot low"></i>Low</span>
+  <span><i class="dot mid"></i>Mid (магазин)</span>
+  <span><i class="dot high"></i>Modern Miami</span>
+</div>
+
+<div id="app"></div>
+
+<div class="summary">
+  <h2>Итого</h2>
+  <div class="sum-row"><span>Если всё по Low</span><span class="n" id="tot-low">$0</span></div>
+  <div class="sum-row"><span>Если всё по Mid</span><span class="n" id="tot-mid">$0</span></div>
+  <div class="sum-row"><span>Если всё по Modern Miami</span><span class="n" id="tot-high">$0</span></div>
+  <div class="picked-total">
+    <span>Выбор Серёжи</span>
+    <span class="n" id="tot-picked">$0</span>
+  </div>
+</div>
+
+<div class="footnote">
+  Не включено: комната Ден (кровать/мебель — после замера), стена и дверь в Ден (смета после замера мастера). Цены ориентировочные.
+</div>
+
+<div class="actions">
+  <button class="btn primary" onclick="exportPicks()">Экспорт выбора Серёжи</button>
+  <button class="btn" onclick="resetAll()">Сбросить всё</button>
+</div>
+<div class="status" id="status"></div>
+
+<div class="exportbox" id="exportbox">
+  <textarea id="exportarea" readonly onclick="this.select()"></textarea>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDX69UFDs09p_mVjqvPUSTAgpVzPHregLo",
+  authDomain: "oasis-hallandale.firebaseapp.com",
+  projectId: "oasis-hallandale",
+  storageBucket: "oasis-hallandale.firebasestorage.app",
+  messagingSenderId: "444378802564",
+  appId: "1:444378802564:web:d0d0ad5547dc3b630195d1"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const docRef = doc(db, "lists", "oasis-hallandale-a1-06");
+
+const data = [
+  { room: "ГОСТИНАЯ", items: [
+    { name: "Диван", qty:"3-местный", low:550, mid:1500, high:2800 },
+    { name: "Журнальный столик", qty:"", low:70, mid:300, high:600 },
+    { name: "Телевизор", qty:'50"', low:250, mid:450, high:900 },
+    { name: "ТВ-тумба / консоль", qty:"", low:100, mid:250, high:500 },
+    { name: "Ковёр", qty:"8x10 ft — комната 12x13", low:80, mid:220, high:480 },
+    { name: "Гардины / шторы", qty:"гостиная — вариант 1", low:40, mid:100, high:220 },
+    { name: "Ролеты / жалюзи blackout", qty:"гостиная — вариант 2, мех./электр.", low:200, mid:320, high:450, alt:true },
+    { name: "Зеркало", qty:"", low:60, mid:150, high:350 },
+    { name: "Барные стулья", qty:"комплект 2", low:100, mid:280, high:550 },
+    { name: "Пуфик", qty:"со storage — функциональный, с отделением внутри", low:60, mid:120, high:220 },
+  ]},
+  { room: "БАЛКОН", items: [
+    { name: "Балконный сет: стол + 2 сидения", qty:"Low = стол + пуфики, Mid/High = стол + 2 стула", low:120, mid:180, high:400 },
+    { name: "Кресло балконное (лаунж)", qty:"", low:130, mid:250, high:450 },
+  ]},
+  { room: "ОПЦИЯ — ПО ЗАПРОСУ", items: [
+    { name: "Обеденный стол + 4 стула (Dining table)", qty:"отдельная зона 8'4\"x9'1\" — включать, только если он хочет", low:250, mid:500, high:900, optional:true },
+  ]},
+  { room: "ОСВЕЩЕНИЕ", items: [
+    { name: "Люстра / подвес над обеденной зоной", qty:"1 шт", low:45, mid:90, high:180 },
+    { name: "Подвесные светильники-купола (барная/кухонная зона)", qty:"2 шт", low:60, mid:80, high:150 },
+    { name: "Прикроватные лампы", qty:"пара, к тумбочкам", low:20, mid:40, high:80 },
+    { name: "Точечные светильники (recessed, если не входят в стандарт застройщика)", qty:"проверить со застройщиком перед заказом", low:60, mid:100, high:180 },
+    { name: "Лампочки LED", qty:"комплект на квартиру", low:20, mid:35, high:60 },
+  ]},
+  { room: "СПАЛЬНЯ (её комната)", items: [
+    { name: "Кровать — база/каркас", qty:"Queen", low:200, mid:450, high:800 },
+    { name: "Матрас", qty:"Queen — минимально приемлемое качество от $400", low:400, mid:700, high:1300 },
+    { name: "Комод / шкаф", qty:"", low:250, mid:600, high:1200 },
+    { name: "Тумбочка (nightstand)", qty:"", low:40, mid:100, high:220 },
+    { name: "Зеркало для спальни", qty:"", low:40, mid:110, high:250 },
+    { name: "Гардины / шторы", qty:"спальня — вариант 1", low:40, mid:100, high:220 },
+    { name: "Ролеты / жалюзи blackout", qty:"спальня — вариант 2, мех./электр.", low:200, mid:320, high:450, alt:true },
+    { name: "Постельное бельё", qty:"комплект", low:30, mid:80, high:180 },
+  ]},
+  { room: "КУХНЯ", items: [
+    { name: "Набор посуды (тарелки/ложки/вилки/ножи)", qty:"на 4 персоны", low:60, mid:150, high:320 },
+    { name: "Органайзер для приборов", qty:"", low:15, mid:35, high:70 },
+    { name: "Набор кастрюль", qty:"", low:50, mid:130, high:280 },
+    { name: "Набор сковородок", qty:"", low:40, mid:110, high:240 },
+    { name: "Дуршлаг", qty:"", low:10, mid:25, high:50 },
+    { name: "Глубокие миски", qty:"набор", low:20, mid:50, high:100 },
+    { name: "Салатница (большая)", qty:"", low:15, mid:35, high:70 },
+    { name: "Электрочайник", qty:"", low:20, mid:50, high:100 },
+    { name: "Тостер", qty:"", low:20, mid:50, high:100 },
+  ]},
+  { room: "ПРОЧЕЕ / ВАННАЯ", items: [
+    { name: "Полотенца", qty:"комплект", low:25, mid:60, high:130 },
+    { name: "Шторка для душа + кольца", qty:"", low:20, mid:45, high:90 },
+    { name: "Мусорные вёдра", qty:"кухня + ванная", low:20, mid:50, high:100 },
+    { name: "Вешалки", qty:"набор", low:15, mid:30, high:60 },
+  ]},
+];
+
+let state = {};
+
+function id(room,name){ return room+'|'+name; }
+
+function defaultState(){
+  const s = {};
+  data.forEach(sec=>sec.items.forEach(it=>{
+    s[id(sec.room,it.name)] = { need: !it.optional, tier:null };
+  }));
+  return s;
+}
+
+let suppressNextSnapshot = false;
+
+async function loadState(){
+  const bar = document.getElementById('savebar');
+  try{
+    const snap = await getDoc(docRef);
+    state = (snap.exists() && snap.data().state) ? JSON.parse(snap.data().state) : defaultState();
+    bar.textContent = 'подключено к Firebase';
+  }catch(e){
+    state = defaultState();
+    bar.textContent = 'нет связи с Firebase — проверь интернет';
+  }
+  render();
+  setTimeout(()=>{ bar.style.display='none'; }, 2500);
+
+  // живое обновление: если кто-то другой (Серёжа) поменял выбор, подтянется само
+  onSnapshot(docRef, (snap)=>{
+    if(suppressNextSnapshot){ suppressNextSnapshot = false; return; }
+    if(snap.exists() && snap.data().state){
+      state = JSON.parse(snap.data().state);
+      render();
+    }
+  });
+}
+
+async function saveState(){
+  const status = document.getElementById('status');
+  status.textContent = 'сохраняю…';
+  try{
+    suppressNextSnapshot = true;
+    await setDoc(docRef, { state: JSON.stringify(state), updatedAt: new Date().toISOString() });
+    status.textContent = 'сохранено в Firebase ✓';
+  }catch(e){
+    status.textContent = 'ошибка сохранения — проверь Firestore rules';
+  }
+  setTimeout(()=>{ status.textContent=''; }, 1800);
+}
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  data.forEach(sec=>{
+    const roomDiv = document.createElement('div');
+    roomDiv.className='room';
+    roomDiv.textContent = sec.room;
+    app.appendChild(roomDiv);
+
+    sec.items.forEach(it=>{
+      const key = id(sec.room, it.name);
+      const st = state[key] || { need: !it.optional, tier:null };
+      state[key] = st;
+      const wrap = document.createElement('div');
+      wrap.className = 'item' + (st.need ? '' : ' excluded') + (it.alt ? ' altpair' : '');
+
+      wrap.innerHTML = `
+        <div class="item-top">
+          <div class="item-name">${it.name}</div>
+          <label class="need-toggle">
+            нужно
+            <input type="checkbox" ${st.need ? 'checked' : ''} data-key="${key}" class="need-cb">
+          </label>
+        </div>
+        ${it.qty ? `<div class="item-note">${it.qty}</div>` : ''}
+        <div class="tiers">
+          <div class="tier ${st.tier==='low' ? 'sel-low' : ''}" data-key="${key}" data-tier="low">
+            <div class="lbl">Low</div><div class="val">$${it.low}</div>
+          </div>
+          <div class="tier ${st.tier==='mid' ? 'sel-mid' : ''}" data-key="${key}" data-tier="mid">
+            <div class="lbl">Mid</div><div class="val">$${it.mid}</div>
+          </div>
+          <div class="tier ${st.tier==='high' ? 'sel-high' : ''}" data-key="${key}" data-tier="high">
+            <div class="lbl">Modern Miami</div><div class="val">$${it.high}</div>
+          </div>
+        </div>
+      `;
+      app.appendChild(wrap);
+    });
+  });
+
+  document.querySelectorAll('.need-cb').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      state[e.target.dataset.key].need = e.target.checked;
+      render();
+      saveState();
+    });
+  });
+  document.querySelectorAll('.tier').forEach(t=>{
+    t.addEventListener('click', e=>{
+      const key = t.dataset.key;
+      const tier = t.dataset.tier;
+      if(!state[key].need) return;
+      state[key].tier = (state[key].tier === tier) ? null : tier;
+      render();
+      saveState();
+    });
+  });
+
+  updateTotals();
+}
+
+function updateTotals(){
+  let totLow=0, totMid=0, totHigh=0, totPicked=0;
+  data.forEach(sec=>sec.items.forEach(it=>{
+    const key = id(sec.room, it.name);
+    const st = state[key];
+    if(!st.need) return;
+    totLow += it.low;
+    totMid += it.mid;
+    totHigh += it.high;
+    if(st.tier) totPicked += it[st.tier];
+  }));
+  document.getElementById('tot-low').textContent = '$'+totLow.toLocaleString();
+  document.getElementById('tot-mid').textContent = '$'+totMid.toLocaleString();
+  document.getElementById('tot-high').textContent = '$'+totHigh.toLocaleString();
+  document.getElementById('tot-picked').textContent = '$'+totPicked.toLocaleString();
+}
+
+function resetAll(){
+  if(!confirm('Сбросить весь выбор? Это удалит и сохранённые данные.')) return;
+  state = defaultState();
+  render();
+  saveState();
+}
+
+function exportPicks(){
+  const tierLabel = {low:'Low', mid:'Mid', high:'Modern Miami'};
+  let lines = [];
+  let total = 0;
+  data.forEach(sec=>{
+    let secLines = [];
+    sec.items.forEach(it=>{
+      const key = id(sec.room, it.name);
+      const st = state[key];
+      if(!st.need || !st.tier) return;
+      const price = it[st.tier];
+      total += price;
+      secLines.push(`${it.name}\t${tierLabel[st.tier]}\t$${price}`);
+    });
+    if(secLines.length){
+      lines.push(`# ${sec.room}`);
+      lines = lines.concat(secLines);
+    }
+  });
+  lines.push('');
+  lines.push(`ИТОГО\t\t$${total.toLocaleString()}`);
+  const text = lines.join('\n');
+
+  const box = document.getElementById('exportbox');
+  const area = document.getElementById('exportarea');
+  area.value = text;
+  box.style.display = 'block';
+  area.focus();
+  area.select();
+
+  try{
+    document.execCommand('copy');
+    document.getElementById('status').textContent = 'скопировано в буфер ✓';
+  }catch(e){
+    document.getElementById('status').textContent = 'выдели текст ниже вручную и скопируй';
+  }
+  setTimeout(()=>{ document.getElementById('status').textContent=''; }, 2500);
+}
+
+window.resetAll = resetAll;
+window.exportPicks = exportPicks;
+
+loadState();
+</script>
+
+</body>
+</html>
