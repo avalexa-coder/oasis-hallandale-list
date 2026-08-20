@@ -3,150 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oasis Hollandale — Furnishing Budget</title>
+<title>Oasis Hallandale — Tracker</title>
 <style>
   :root{
-    --ink:#1c1c1a;
-    --paper:#faf8f4;
-    --line:#ddd7cb;
-    --accent:#5b6b4f;
-    --accent-soft:#e7ebe1;
-    --low:#8a8f7a;
-    --mid:#5b6b4f;
-    --high:#3d4a35;
+    --ink:#1c1c1a; --paper:#faf8f4; --line:#ddd7cb;
+    --accent:#5b6b4f; --accent-soft:#e7ebe1;
+    --amber:#c48a2e; --amber-soft:#faf1de;
+    --red:#a6462e; --red-soft:#f7e6e1;
+    --done:#9a9a92;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;background:var(--paper);color:var(--ink);
-    font-family:'Georgia','Times New Roman',serif;
-    -webkit-font-smoothing:antialiased;padding-bottom:70px;
-  }
-  header{padding:24px 18px 16px;border-bottom:2px solid var(--ink);}
-  header h1{font-size:1.4rem;margin:0 0 4px;}
-  header .sub{font-family:Arial,sans-serif;font-size:0.78rem;color:#555;line-height:1.5;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Georgia','Times New Roman',serif;-webkit-font-smoothing:antialiased;padding-bottom:70px;}
+  a{color:inherit;}
 
-  .savebar{
-    position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;
-    font-family:Arial,sans-serif;font-size:0.7rem;padding:6px 18px;text-align:center;opacity:0.9;
+  header{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:2px solid var(--ink);padding:14px 16px 10px;}
+  .h-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  h1{font-size:1.25rem;margin:0;}
+  .sync{font-family:Arial,sans-serif;font-size:0.68rem;display:flex;align-items:center;gap:5px;color:#666;white-space:nowrap;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+  .dot.err{background:var(--red);}
+
+  .budgetbar{
+    display:flex;justify-content:space-between;font-family:Arial,sans-serif;
+    font-size:0.75rem;margin-top:10px;padding:10px 12px;background:#fff;border:1px solid var(--line);
+  }
+  .budgetbar div{text-align:center;flex:1;}
+  .budgetbar b{display:block;font-size:1rem;margin-top:2px;}
+  .over{color:var(--red);}
+  .under{color:var(--accent);}
+
+  .progresswrap{margin-top:8px;font-family:Arial,sans-serif;font-size:0.68rem;color:#777;}
+  .progressbar{height:6px;background:var(--line);margin-top:4px;overflow:hidden;}
+  .progressfill{height:100%;background:var(--accent);}
+
+  .toolbar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .icon-btn{display:inline-flex;align-items:center;gap:5px;}
+  .icon-btn svg{flex-shrink:0;}
+
+  .toolbar button{
+    font-family:Arial,sans-serif;font-size:0.68rem;padding:6px 10px;
+    background:none;border:1px solid var(--line);color:#555;cursor:pointer;
   }
 
-  .notice{
-    margin:14px 18px;padding:12px 14px;background:var(--accent-soft);
-    border-left:3px solid var(--accent);font-family:Arial,sans-serif;
-    font-size:0.8rem;line-height:1.55;color:#333;
+  .filters{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;font-family:Arial,sans-serif;}
+  .filters select{
+    font-size:0.7rem;padding:6px 8px;border:1px solid var(--line);background:#fff;color:var(--ink);
   }
-  .notice b{color:var(--accent);}
-  .legend{
-    display:flex;gap:14px;padding:0 18px 6px;font-family:Arial,sans-serif;
-    font-size:0.72rem;color:#666;flex-wrap:wrap;
+  .chip{
+    font-size:0.68rem;padding:6px 10px;border:1px solid var(--line);background:#fff;cursor:pointer;color:#555;
   }
-  .legend span{display:flex;align-items:center;gap:5px;}
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-  .dot.low{background:var(--low);}
-  .dot.mid{background:var(--mid);}
-  .dot.high{background:var(--high);}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 
-  .room{
-    margin:24px 18px 10px;font-family:Arial,sans-serif;font-size:0.68rem;
-    letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);
+  .addbar{display:flex;gap:6px;margin:10px 16px;flex-wrap:wrap;}
+  .addbar select, .addbar input{
+    font-family:Arial,sans-serif;font-size:0.75rem;padding:8px;border:1px solid var(--line);background:#fff;
+  }
+  .addbar input{flex:1;min-width:120px;}
+  .addbar button{
+    font-family:Arial,sans-serif;font-size:0.75rem;padding:8px 14px;background:var(--ink);color:#fff;border:none;cursor:pointer;
+  }
+
+  .zone{margin:20px 16px 8px;}
+  .zone-head{
+    display:flex;justify-content:space-between;align-items:center;cursor:pointer;
     border-bottom:1px solid var(--line);padding-bottom:6px;
   }
+  .zone-title{font-family:Arial,sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);}
+  .zone-sub{font-family:Arial,sans-serif;font-size:0.68rem;color:#888;}
+  .zone-caret{font-family:Arial,sans-serif;color:#999;font-size:0.75rem;}
 
-  .item{margin:0 18px 14px;border:1px solid var(--line);background:#fff;padding:12px 14px;}
-  .item.excluded{opacity:0.45;}
-  .item.altpair{border-left:3px solid var(--accent);}
-  .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px;}
-  .item-name{font-size:1rem;}
-  .item-name .qty{font-family:Arial,sans-serif;font-size:0.7rem;color:#888;display:block;margin-top:2px;}
-  .item-note{font-family:Arial,sans-serif;font-size:0.7rem;color:#8a7a5c;margin:0 0 10px;}
-  .need-toggle{
-    font-family:Arial,sans-serif;font-size:0.7rem;display:flex;align-items:center;gap:6px;
-    white-space:nowrap;color:#555;cursor:pointer;
+  .card{
+    margin:10px 0;border:1px solid var(--line);background:#fff;padding:12px;
   }
-  .need-toggle input{transform:scale(1.15);accent-color:var(--accent);}
+  .card.blocked{border-left:3px solid var(--red);background:var(--red-soft);}
+  .card.urgent{border-left:3px solid var(--amber);background:var(--amber-soft);}
+  .card.done{opacity:0.55;text-decoration:line-through;}
+  .card.cancelled{opacity:0.4;font-style:italic;text-decoration:line-through;}
 
-  .tiers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
-  .tier{border:1px solid var(--line);padding:8px 5px;text-align:center;cursor:pointer;font-family:Arial,sans-serif;transition:all .15s;}
-  .tier .lbl{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.04em;color:#999;margin-bottom:3px;}
-  .tier .val{font-size:0.9rem;color:var(--ink);}
-  .tier.sel-low{background:var(--low);border-color:var(--low);}
-  .tier.sel-mid{background:var(--mid);border-color:var(--mid);}
-  .tier.sel-high{background:var(--high);border-color:var(--high);}
-  .tier.sel-low .lbl,.tier.sel-mid .lbl,.tier.sel-high .lbl,
-  .tier.sel-low .val,.tier.sel-mid .val,.tier.sel-high .val{color:#fff;}
-
-  .summary{margin:28px 18px 0;border:2px solid var(--ink);background:#fff;}
-  .summary h2{font-size:0.95rem;margin:0;padding:12px 14px;border-bottom:2px solid var(--ink);}
-  .sum-row{display:flex;justify-content:space-between;padding:9px 14px;font-family:Arial,sans-serif;font-size:0.82rem;border-bottom:1px solid var(--line);}
-  .sum-row .n{font-variant-numeric:tabular-nums;}
-  .picked-total{display:flex;justify-content:space-between;padding:14px;font-family:Arial,sans-serif;background:var(--ink);color:#fff;}
-  .picked-total .n{font-size:1.3rem;font-variant-numeric:tabular-nums;}
-
-  .footnote{margin:16px 18px 0;font-family:Arial,sans-serif;font-size:0.72rem;color:#888;line-height:1.6;}
-
-  .actions{margin:20px 18px 0;display:flex;gap:8px;}
-  .btn{
-    flex:1;padding:11px;font-family:Arial,sans-serif;font-size:0.75rem;
-    text-align:center;cursor:pointer;border:1px solid var(--ink);background:none;color:var(--ink);
+  .card-row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .flags{display:flex;gap:6px;}
+  .flags span{
+    cursor:pointer;font-family:Arial,sans-serif;font-size:0.62rem;letter-spacing:0.03em;
+    padding:3px 7px;border:1px solid var(--line);color:#999;text-transform:uppercase;
   }
-  .btn.primary{background:var(--ink);color:#fff;}
-  .status{font-family:Arial,sans-serif;font-size:0.68rem;color:#999;text-align:center;margin-top:8px;height:14px;}
+  .flags span.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .task-name{font-size:0.95rem;flex:1;}
+  .del{cursor:pointer;color:#bbb;font-family:Arial,sans-serif;font-size:0.85rem;}
 
-  .exportbox{
-    margin:14px 18px 0;display:none;
+  .card-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+  .card select, .card input, .card textarea{
+    font-family:Arial,sans-serif;font-size:0.72rem;padding:6px 7px;border:1px solid var(--line);background:#fdfcfa;width:100%;
   }
-  .exportbox textarea{
-    width:100%;height:220px;font-family:'Courier New',monospace;font-size:0.72rem;
-    padding:10px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  .fieldlabel{font-family:Arial,sans-serif;font-size:0.6rem;color:#999;margin-bottom:2px;display:block;text-transform:uppercase;letter-spacing:0.04em;}
+  .card textarea{min-height:44px;resize:vertical;font-family:Arial,sans-serif;}
+  .overdue{color:var(--red)!important;font-weight:bold;}
+
+  .footnote{margin:20px 16px 0;font-family:Arial,sans-serif;font-size:0.7rem;color:#888;line-height:1.6;}
+
+  .bell{
+    position:relative;cursor:pointer;font-family:Arial,sans-serif;font-size:0.7rem;
+    padding:6px 10px;border:1px solid var(--line);color:#555;
   }
+  .badge{
+    position:absolute;top:-6px;right:-8px;background:var(--red);color:#fff;
+    font-family:Arial,sans-serif;font-size:0.6rem;min-width:15px;height:15px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;padding:0 3px;
+  }
+  .changed-by{font-family:Arial,sans-serif;font-size:0.62rem;color:#aaa;margin-top:6px;text-align:right;}
+
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(28,28,26,0.5);z-index:50;
+    align-items:flex-end;justify-content:center;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--paper);width:100%;max-width:480px;max-height:80vh;overflow-y:auto;
+    border-top:2px solid var(--ink);padding:16px;
+  }
+  .modal h3{margin:0 0 12px;font-size:1rem;}
+  .whoami-choices{display:flex;gap:10px;}
+  .whoami-choices button{
+    flex:1;padding:14px;font-family:Arial,sans-serif;font-size:0.85rem;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
+  }
+  .modal-close{
+    display:block;margin-top:14px;width:100%;padding:10px;font-family:Arial,sans-serif;
+    font-size:0.75rem;background:none;border:1px solid var(--line);color:#555;cursor:pointer;
+  }
+  .log-entry{
+    font-family:Arial,sans-serif;font-size:0.75rem;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5;
+  }
+  .log-entry b{color:var(--accent);}
+  .log-time{color:#999;font-size:0.65rem;}
 </style>
 </head>
 <body>
 
-<div class="savebar" id="savebar">загрузка...</div>
-
 <header>
-  <h1>Oasis, Hollandale — 1BR Furnishing</h1>
-  <div class="sub">Residence A1-06 · Closing 09/06 · Клиент: Серёжа · Доставка до 3 сентября · Стена/дверь в Ден (доп. комната) — отдельно, замер и смета после приезда мастера</div>
+  <div class="h-top">
+    <h1>Oasis Hallandale — Tracker</h1>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="bell icon-btn" id="bellBtn" onclick="openActivity()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Изменения<span class="badge" id="bellBadge" style="display:none">0</span></div>
+      <div class="sync"><span class="dot" id="syncdot"></span><span id="syncstatus">…</span></div>
+    </div>
+  </div>
+
+  <div class="budgetbar">
+    <div>Бюджет<b id="sumBudget">$0</b></div>
+    <div>Факт<b id="sumActual">$0</b></div>
+    <div>Разница<b id="sumDiff">$0</b></div>
+  </div>
+
+  <div class="progresswrap">
+    Готово: <span id="doneCount">0</span>/<span id="totalCount">0</span> (<span id="donePct">0</span>%)
+    <div class="progressbar"><div class="progressfill" id="progressfill" style="width:0%"></div></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="icon-btn" onclick="exportJSON()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>Export JSON</button>
+    <button class="icon-btn" onclick="document.getElementById('importFile').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M4 3h16"/></svg>Import JSON</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+  </div>
+
+  <div class="filters">
+    <select id="fStatus" onchange="render()">
+      <option value="">Статус: все</option>
+      <option>Не начато</option><option>В ожидании</option><option>В процессе</option><option>Готово</option><option>Отменено</option>
+    </select>
+    <select id="fResp" onchange="render()">
+      <option value="">Ответственный: все</option>
+      <option>Алекса</option><option>Серёжа</option><option>Мастер</option>
+    </select>
+    <select id="fZone" onchange="render()"><option value="">Зона: все</option></select>
+    <div class="chip icon-btn" id="chipUrgent" onclick="toggleChip('urgent')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></svg>Срочно</div>
+    <div class="chip icon-btn" id="chipBlocked" onclick="toggleChip('blocked')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Блок</div>
+  </div>
+
+  <div class="addbar">
+    <select id="newZone"></select>
+    <input id="newTask" placeholder="Название новой позиции">
+    <button onclick="addTask()">ADD</button>
+  </div>
 </header>
-
-<div class="notice">
-  Low — реальные цены, по которым это можно купить. Mid — нормальная цена в обычном магазине (недорого, но не редкость). Modern Miami — более статусный вариант.<br>
-  <b>Окна:</b> для гостиной и спальни есть 2 варианта покрытия — обычные <b>шторы</b> или <b>ролеты/жалюзи blackout</b> (механические или электрические с пультом). Выбери по одному варианту на комнату — не оба.<br>
-  <b>Опция:</b> обеденный стол — по умолчанию выключен, включи галочку «нужно», если хочешь его добавить.
-</div>
-
-<div class="legend">
-  <span><i class="dot low"></i>Low</span>
-  <span><i class="dot mid"></i>Mid (магазин)</span>
-  <span><i class="dot high"></i>Modern Miami</span>
-</div>
 
 <div id="app"></div>
 
-<div class="summary">
-  <h2>Итого</h2>
-  <div class="sum-row"><span>Если всё по Low</span><span class="n" id="tot-low">$0</span></div>
-  <div class="sum-row"><span>Если всё по Mid</span><span class="n" id="tot-mid">$0</span></div>
-  <div class="sum-row"><span>Если всё по Modern Miami</span><span class="n" id="tot-high">$0</span></div>
-  <div class="picked-total">
-    <span>Выбор Серёжи</span>
-    <span class="n" id="tot-picked">$0</span>
+<div class="footnote">
+  Бюджет по умолчанию взят по средней (Mid) цене из первоначального списка — поправь под реальный выбор Серёжи, когда пришлёшь экспорт. Факт заполняй по мере покупок. Синк — через тот же Firebase-проект, обновления между тобой и Серёжей приходят сами.
+</div>
+
+<div class="modal-overlay" id="whoamiOverlay">
+  <div class="modal">
+    <h3>Кто ты?</h3>
+    <div class="whoami-choices">
+      <button onclick="chooseUser('Алекса')">Алекса</button>
+      <button onclick="chooseUser('Серёжа')">Серёжа</button>
+    </div>
   </div>
 </div>
 
-<div class="footnote">
-  Не включено: комната Ден (кровать/мебель — после замера), стена и дверь в Ден (смета после замера мастера). Цены ориентировочные.
-</div>
-
-<div class="actions">
-  <button class="btn primary" onclick="exportPicks()">Экспорт выбора Серёжи</button>
-  <button class="btn" onclick="resetAll()">Сбросить всё</button>
-</div>
-<div class="status" id="status"></div>
-
-<div class="exportbox" id="exportbox">
-  <textarea id="exportarea" readonly onclick="this.select()"></textarea>
+<div class="modal-overlay" id="activityOverlay">
+  <div class="modal">
+    <h3>Изменения</h3>
+    <div id="activityList"></div>
+    <button class="modal-close" onclick="closeActivity()">Закрыть</button>
+  </div>
 </div>
 
 <script type="module">
@@ -163,243 +224,401 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
-const docRef = doc(db, "lists", "oasis-hallandale-a1-06");
+const docRef = doc(db, "trackers", "oasis-hallandale-tracker");
 
-const data = [
-  { room: "ГОСТИНАЯ", items: [
-    { name: "Диван", qty:"3-местный", low:550, mid:1500, high:2800 },
-    { name: "Журнальный столик", qty:"", low:70, mid:300, high:600 },
-    { name: "Телевизор", qty:'50"', low:250, mid:450, high:900 },
-    { name: "ТВ-тумба / консоль", qty:"", low:100, mid:250, high:500 },
-    { name: "Ковёр", qty:"8x10 ft — комната 12x13", low:80, mid:220, high:480 },
-    { name: "Гардины / шторы", qty:"гостиная — вариант 1", low:40, mid:100, high:220 },
-    { name: "Ролеты / жалюзи blackout", qty:"гостиная — вариант 2, мех./электр.", low:200, mid:320, high:450, alt:true },
-    { name: "Зеркало", qty:"", low:60, mid:150, high:350 },
-    { name: "Барные стулья", qty:"комплект 2", low:100, mid:280, high:550 },
-    { name: "Пуфик", qty:"со storage — функциональный, с отделением внутри", low:60, mid:120, high:220 },
-  ]},
-  { room: "БАЛКОН", items: [
-    { name: "Балконный сет: стол + 2 сидения", qty:"Low = стол + пуфики, Mid/High = стол + 2 стула", low:120, mid:180, high:400 },
-    { name: "Кресло балконное (лаунж)", qty:"", low:130, mid:250, high:450 },
-  ]},
-  { room: "ОПЦИЯ — ПО ЗАПРОСУ", items: [
-    { name: "Обеденный стол + 4 стула (Dining table)", qty:"отдельная зона 8'4\"x9'1\" — включать, только если он хочет", low:250, mid:500, high:900, optional:true },
-  ]},
-  { room: "ОСВЕЩЕНИЕ", items: [
-    { name: "Люстра / подвес над обеденной зоной", qty:"1 шт", low:45, mid:90, high:180 },
-    { name: "Подвесные светильники-купола (барная/кухонная зона)", qty:"2 шт", low:60, mid:80, high:150 },
-    { name: "Прикроватные лампы", qty:"пара, к тумбочкам", low:20, mid:40, high:80 },
-    { name: "Точечные светильники (recessed, если не входят в стандарт застройщика)", qty:"проверить со застройщиком перед заказом", low:60, mid:100, high:180 },
-    { name: "Лампочки LED", qty:"комплект на квартиру", low:20, mid:35, high:60 },
-  ]},
-  { room: "СПАЛЬНЯ (её комната)", items: [
-    { name: "Кровать — база/каркас", qty:"Queen", low:200, mid:450, high:800 },
-    { name: "Матрас", qty:"Queen — минимально приемлемое качество от $400", low:400, mid:700, high:1300 },
-    { name: "Комод / шкаф", qty:"", low:250, mid:600, high:1200 },
-    { name: "Тумбочка (nightstand)", qty:"", low:40, mid:100, high:220 },
-    { name: "Зеркало для спальни", qty:"", low:40, mid:110, high:250 },
-    { name: "Гардины / шторы", qty:"спальня — вариант 1", low:40, mid:100, high:220 },
-    { name: "Ролеты / жалюзи blackout", qty:"спальня — вариант 2, мех./электр.", low:200, mid:320, high:450, alt:true },
-    { name: "Постельное бельё", qty:"комплект", low:30, mid:80, high:180 },
-  ]},
-  { room: "КУХНЯ", items: [
-    { name: "Набор посуды (тарелки/ложки/вилки/ножи)", qty:"на 4 персоны", low:60, mid:150, high:320 },
-    { name: "Органайзер для приборов", qty:"", low:15, mid:35, high:70 },
-    { name: "Набор кастрюль", qty:"", low:50, mid:130, high:280 },
-    { name: "Набор сковородок", qty:"", low:40, mid:110, high:240 },
-    { name: "Дуршлаг", qty:"", low:10, mid:25, high:50 },
-    { name: "Глубокие миски", qty:"набор", low:20, mid:50, high:100 },
-    { name: "Салатница (большая)", qty:"", low:15, mid:35, high:70 },
-    { name: "Электрочайник", qty:"", low:20, mid:50, high:100 },
-    { name: "Тостер", qty:"", low:20, mid:50, high:100 },
-  ]},
-  { room: "ПРОЧЕЕ / ВАННАЯ", items: [
-    { name: "Полотенца", qty:"комплект", low:25, mid:60, high:130 },
-    { name: "Шторка для душа + кольца", qty:"", low:20, mid:45, high:90 },
-    { name: "Мусорные вёдра", qty:"кухня + ванная", low:20, mid:50, high:100 },
-    { name: "Вешалки", qty:"набор", low:15, mid:30, high:60 },
-  ]},
-];
+let currentUser = localStorage.getItem('oasis-whoami') || null;
+let log = [];
 
-let state = {};
+const FIELD_LABELS = {
+  status:"Статус", resp:"Ответственный", budget:"Бюджет", actual:"Факт",
+  contact:"Поставщик/ссылка", deadline:"Дедлайн", notes:"Notes",
+  urgent:"Флаг: срочно", blocked:"Флаг: блок"
+};
 
-function id(room,name){ return room+'|'+name; }
-
-function defaultState(){
-  const s = {};
-  data.forEach(sec=>sec.items.forEach(it=>{
-    s[id(sec.room,it.name)] = { need: !it.optional, tier:null };
-  }));
-  return s;
+function ensureUser(){
+  if(!currentUser){
+    document.getElementById('whoamiOverlay').classList.add('open');
+  }
+}
+window.chooseUser = function(name){
+  currentUser = name;
+  localStorage.setItem('oasis-whoami', name);
+  document.getElementById('whoamiOverlay').classList.remove('open');
+  render();
 }
 
+function timeAgo(iso){
+  if(!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff/60000);
+  if(min < 1) return 'только что';
+  if(min < 60) return min+' мин назад';
+  const hr = Math.floor(min/60);
+  if(hr < 24) return hr+' ч назад';
+  const day = Math.floor(hr/24);
+  return day+' дн назад';
+}
+
+function pushLog(entry){
+  log.unshift({ time:new Date().toISOString(), who: currentUser||'Неизвестно', ...entry });
+  if(log.length > 200) log = log.slice(0,200);
+}
+
+function lastChangeFor(taskId){
+  return log.find(l=>l.taskId===taskId);
+}
+
+window.openActivity = function(){
+  const listEl = document.getElementById('activityList');
+  if(!log.length){
+    listEl.innerHTML = '<div class="log-entry">Пока нет изменений</div>';
+  } else {
+    listEl.innerHTML = log.map(l=>{
+      let desc;
+      if(l.kind==='delete') desc = `удалил(а) позицию <b>${l.task}</b> (${l.zone})`;
+      else if(l.kind==='add') desc = `добавил(а) позицию <b>${l.task}</b> (${l.zone})`;
+      else desc = `изменил(а) <b>${FIELD_LABELS[l.field]||l.field}</b> — ${l.task} (${l.zone}): "${l.from||'—'}" → "${l.to||'—'}"`;
+      return `<div class="log-entry"><b>${l.who}</b> ${desc}<div class="log-time">${timeAgo(l.time)}</div></div>`;
+    }).join('');
+  }
+  document.getElementById('activityOverlay').classList.add('open');
+  localStorage.setItem('oasis-lastseen-'+currentUser, new Date().toISOString());
+  updateBell();
+}
+window.closeActivity = function(){
+  document.getElementById('activityOverlay').classList.remove('open');
+}
+
+function updateBell(){
+  const lastSeen = localStorage.getItem('oasis-lastseen-'+currentUser);
+  const count = lastSeen ? log.filter(l=>new Date(l.time) > new Date(lastSeen) && l.who!==currentUser).length
+                          : log.filter(l=>l.who!==currentUser).length;
+  const badge = document.getElementById('bellBadge');
+  if(count > 0){ badge.style.display='flex'; badge.textContent = count>99?'99+':count; }
+  else { badge.style.display='none'; }
+}
+
+const ZONES = ["ГОСТИНАЯ","БАЛКОН","ОПЦИЯ","ОСВЕЩЕНИЕ","СПАЛЬНЯ","КУХНЯ","ПРОЧЕЕ/ВАННАЯ","ДЕН"];
+
+function seedTasks(){
+  const mk = (zone, task, budget, opts={}) => ({
+    id: zone+'|'+task, zone, task, budget, actual:0,
+    status: opts.status || "Не начато", resp:"", contact:"", deadline:"",
+    notes: opts.notes || "",
+    urgent: !!opts.urgent, blocked: !!opts.blocked
+  });
+  const NOT_NEEDED = { status:"Отменено", notes:"Решили не покупать" };
+
+  return [
+    mk("ГОСТИНАЯ","Диван",2800),
+    mk("ГОСТИНАЯ","Журнальный столик",600),
+    mk("ГОСТИНАЯ","Телевизор",900),
+    mk("ГОСТИНАЯ","ТВ-тумба / консоль",500),
+    mk("ГОСТИНАЯ","Ковёр",0,NOT_NEEDED),
+    mk("ГОСТИНАЯ","Гардины / шторы",0,{status:"Отменено", notes:"Остановились на ролетах вместо штор"}),
+    mk("ГОСТИНАЯ","Ролеты / жалюзи blackout",450),
+    mk("ГОСТИНАЯ","Зеркало",350),
+    mk("ГОСТИНАЯ","Барные стулья",550),
+    mk("ГОСТИНАЯ","Пуфик (storage)",120),
+
+    mk("БАЛКОН","Балконный сет: стол + 2 сидения",180),
+    mk("БАЛКОН","Кресло балконное",250),
+
+    mk("ОПЦИЯ","Обеденный стол + 4 стула",0),
+
+    mk("ОСВЕЩЕНИЕ","Люстра / подвес над обеденной зоной",180),
+    mk("ОСВЕЩЕНИЕ","Подвесные светильники-купола (2 шт)",150),
+    mk("ОСВЕЩЕНИЕ","Прикроватные лампы (пара)",80),
+    mk("ОСВЕЩЕНИЕ","Точечные светильники",180),
+    mk("ОСВЕЩЕНИЕ","Лампочки LED",60),
+
+    mk("СПАЛЬНЯ","Кровать — база/каркас",450),
+    mk("СПАЛЬНЯ","Матрас",1300),
+    mk("СПАЛЬНЯ","Комод / шкаф",600),
+    mk("СПАЛЬНЯ","Тумбочка",220),
+    mk("СПАЛЬНЯ","Зеркало для спальни",250),
+    mk("СПАЛЬНЯ","Гардины / шторы",0,{status:"Отменено", notes:"Остановились на ролетах вместо штор"}),
+    mk("СПАЛЬНЯ","Ролеты / жалюзи blackout",450),
+    mk("СПАЛЬНЯ","Постельное бельё",180),
+
+    mk("КУХНЯ","Набор посуды",0,NOT_NEEDED),
+    mk("КУХНЯ","Органайзер для приборов",35),
+    mk("КУХНЯ","Набор кастрюль",0,NOT_NEEDED),
+    mk("КУХНЯ","Набор сковородок",240),
+    mk("КУХНЯ","Дуршлаг",0,NOT_NEEDED),
+    mk("КУХНЯ","Глубокие миски",0,NOT_NEEDED),
+    mk("КУХНЯ","Салатница",0,NOT_NEEDED),
+    mk("КУХНЯ","Электрочайник",100),
+    mk("КУХНЯ","Тостер",100),
+
+    mk("ПРОЧЕЕ/ВАННАЯ","Полотенца",60),
+    mk("ПРОЧЕЕ/ВАННАЯ","Шторка для душа + кольца",0,{status:"Отменено", notes:"Не нужна — в ванной стеклянная дверь"}),
+    mk("ПРОЧЕЕ/ВАННАЯ","Мусорные вёдра",50),
+    mk("ПРОЧЕЕ/ВАННАЯ","Вешалки",30),
+
+    { id:"ДЕН|Стена + дверь", zone:"ДЕН", task:"Стена + дверь (замер, материалы, работа)", budget:0, actual:0,
+      status:"Не начато", resp:"Мастер", contact:"", deadline:"", notes:"Смета после замера мастера — Серёжа оплачивает отдельно",
+      urgent:false, blocked:false },
+  ];
+}
+
+let tasks = [];
+let activeChips = { urgent:false, blocked:false };
 let suppressNextSnapshot = false;
 
-async function loadState(){
-  const bar = document.getElementById('savebar');
+function initFilters(){
+  const zoneSel = document.getElementById('fZone');
+  const newZoneSel = document.getElementById('newZone');
+  ZONES.forEach(z=>{
+    const o1 = document.createElement('option'); o1.value=z; o1.textContent=z; zoneSel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value=z; o2.textContent=z; newZoneSel.appendChild(o2);
+  });
+}
+
+async function loadTasks(){
+  const dot = document.getElementById('syncdot');
+  const status = document.getElementById('syncstatus');
   try{
     const snap = await getDoc(docRef);
-    state = (snap.exists() && snap.data().state) ? JSON.parse(snap.data().state) : defaultState();
-    bar.textContent = 'подключено к Firebase';
+    tasks = (snap.exists() && snap.data().tasks) ? snap.data().tasks : seedTasks();
+    log = (snap.exists() && snap.data().log) ? snap.data().log : [];
+    dot.classList.remove('err'); status.textContent = 'SYNCED';
   }catch(e){
-    state = defaultState();
-    bar.textContent = 'нет связи с Firebase — проверь интернет';
+    tasks = seedTasks();
+    dot.classList.add('err'); status.textContent = 'SYNC ERROR';
   }
+  ensureUser();
   render();
-  setTimeout(()=>{ bar.style.display='none'; }, 2500);
+  updateBell();
 
-  // живое обновление: если кто-то другой (Серёжа) поменял выбор, подтянется само
   onSnapshot(docRef, (snap)=>{
     if(suppressNextSnapshot){ suppressNextSnapshot = false; return; }
-    if(snap.exists() && snap.data().state){
-      state = JSON.parse(snap.data().state);
+    if(snap.exists() && snap.data().tasks){
+      tasks = snap.data().tasks;
+      log = snap.data().log || [];
       render();
+      updateBell();
     }
   });
 }
 
-async function saveState(){
-  const status = document.getElementById('status');
-  status.textContent = 'сохраняю…';
+async function saveTasks(){
+  const dot = document.getElementById('syncdot');
+  const status = document.getElementById('syncstatus');
   try{
     suppressNextSnapshot = true;
-    await setDoc(docRef, { state: JSON.stringify(state), updatedAt: new Date().toISOString() });
-    status.textContent = 'сохранено в Firebase ✓';
+    await setDoc(docRef, { tasks, log, updatedAt: new Date().toISOString() });
+    dot.classList.remove('err'); status.textContent = 'SYNCED';
   }catch(e){
-    status.textContent = 'ошибка сохранения — проверь Firestore rules';
+    dot.classList.add('err'); status.textContent = 'SYNC ERROR';
   }
-  setTimeout(()=>{ status.textContent=''; }, 1800);
+}
+
+function toggleChip(key){
+  activeChips[key] = !activeChips[key];
+  document.getElementById('chip'+key.charAt(0).toUpperCase()+key.slice(1)).classList.toggle('active', activeChips[key]);
+  render();
+}
+window.toggleChip = toggleChip;
+
+function filtered(){
+  const fs = document.getElementById('fStatus').value;
+  const fr = document.getElementById('fResp').value;
+  const fz = document.getElementById('fZone').value;
+  return tasks.filter(t=>{
+    if(fs && t.status!==fs) return false;
+    if(fr && t.resp!==fr) return false;
+    if(fz && t.zone!==fz) return false;
+    if(activeChips.urgent && !t.urgent) return false;
+    if(activeChips.blocked && !t.blocked) return false;
+    return true;
+  });
+}
+
+function isOverdue(t){
+  if(!t.deadline || t.status==='Готово' || t.status==='Отменено') return false;
+  return new Date(t.deadline) < new Date(new Date().toDateString());
 }
 
 function render(){
   const app = document.getElementById('app');
   app.innerHTML = '';
-  data.forEach(sec=>{
-    const roomDiv = document.createElement('div');
-    roomDiv.className='room';
-    roomDiv.textContent = sec.room;
-    app.appendChild(roomDiv);
+  const list = filtered();
 
-    sec.items.forEach(it=>{
-      const key = id(sec.room, it.name);
-      const st = state[key] || { need: !it.optional, tier:null };
-      state[key] = st;
-      const wrap = document.createElement('div');
-      wrap.className = 'item' + (st.need ? '' : ' excluded') + (it.alt ? ' altpair' : '');
+  ZONES.forEach(zone=>{
+    const zoneTasks = list.filter(t=>t.zone===zone);
+    if(!zoneTasks.length) return;
 
-      wrap.innerHTML = `
-        <div class="item-top">
-          <div class="item-name">${it.name}</div>
-          <label class="need-toggle">
-            нужно
-            <input type="checkbox" ${st.need ? 'checked' : ''} data-key="${key}" class="need-cb">
-          </label>
+    const zb = tasks.filter(t=>t.zone===zone).reduce((s,t)=>s+(+t.budget||0),0);
+    const za = tasks.filter(t=>t.zone===zone).reduce((s,t)=>s+(+t.actual||0),0);
+
+    const zoneDiv = document.createElement('div');
+    zoneDiv.className = 'zone';
+    zoneDiv.innerHTML = `<div class="zone-head"><span class="zone-title">${zone}</span><span class="zone-sub">Бюджет $${zb.toLocaleString()} · Факт $${za.toLocaleString()}</span></div>`;
+    app.appendChild(zoneDiv);
+
+    zoneTasks.forEach(t=>{
+      const card = document.createElement('div');
+      let cls = 'card';
+      if(t.blocked) cls+=' blocked';
+      if(t.urgent) cls+=' urgent';
+      if(t.status==='Готово') cls+=' done';
+      if(t.status==='Отменено') cls+=' cancelled';
+      card.className = cls;
+
+      card.innerHTML = `
+        <div class="card-row1">
+          <div class="flags">
+            <span class="icon-btn ${t.urgent?'on':''}" data-act="urgent" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></svg>Срочно</span>
+            <span class="icon-btn ${t.blocked?'on':''}" data-act="blocked" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Блок</span>
+          </div>
+          <div class="task-name">${t.task}</div>
+          <div class="del" data-act="del" data-id="${t.id}">✕</div>
         </div>
-        ${it.qty ? `<div class="item-note">${it.qty}</div>` : ''}
-        <div class="tiers">
-          <div class="tier ${st.tier==='low' ? 'sel-low' : ''}" data-key="${key}" data-tier="low">
-            <div class="lbl">Low</div><div class="val">$${it.low}</div>
+        <div class="card-row">
+          <div><span class="fieldlabel">Статус</span>
+            <select data-field="status" data-id="${t.id}">
+              ${["Не начато","В ожидании","В процессе","Готово","Отменено"].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
           </div>
-          <div class="tier ${st.tier==='mid' ? 'sel-mid' : ''}" data-key="${key}" data-tier="mid">
-            <div class="lbl">Mid</div><div class="val">$${it.mid}</div>
-          </div>
-          <div class="tier ${st.tier==='high' ? 'sel-high' : ''}" data-key="${key}" data-tier="high">
-            <div class="lbl">Modern Miami</div><div class="val">$${it.high}</div>
+          <div><span class="fieldlabel">Ответственный</span>
+            <select data-field="resp" data-id="${t.id}">
+              <option value="" ${!t.resp?'selected':''}>—</option>
+              ${["Алекса","Серёжа","Мастер"].map(r=>`<option ${t.resp===r?'selected':''}>${r}</option>`).join('')}
+            </select>
           </div>
         </div>
+        <div class="card-row">
+          <div><span class="fieldlabel">Бюджет $</span><input type="number" data-field="budget" data-id="${t.id}" value="${t.budget}"></div>
+          <div><span class="fieldlabel">Факт $</span><input type="number" data-field="actual" data-id="${t.id}" value="${t.actual}"></div>
+        </div>
+        <div class="card-row">
+          <div><span class="fieldlabel">Поставщик / ссылка</span><input type="text" data-field="contact" data-id="${t.id}" value="${t.contact||''}"></div>
+          <div><span class="fieldlabel">Дедлайн</span><input type="date" data-field="deadline" data-id="${t.id}" value="${t.deadline||''}" class="${isOverdue(t)?'overdue':''}"></div>
+        </div>
+        <div style="margin-top:8px;">
+          <span class="fieldlabel">Notes</span>
+          <textarea data-field="notes" data-id="${t.id}">${t.notes||''}</textarea>
+        </div>
+        ${lastChangeFor(t.id) ? `<div class="changed-by">изменил(а) ${lastChangeFor(t.id).who} · ${timeAgo(lastChangeFor(t.id).time)}</div>` : ''}
       `;
-      app.appendChild(wrap);
+      zoneDiv.appendChild(card);
     });
   });
 
-  document.querySelectorAll('.need-cb').forEach(cb=>{
-    cb.addEventListener('change', e=>{
-      state[e.target.dataset.key].need = e.target.checked;
-      render();
-      saveState();
-    });
-  });
-  document.querySelectorAll('.tier').forEach(t=>{
-    t.addEventListener('click', e=>{
-      const key = t.dataset.key;
-      const tier = t.dataset.tier;
-      if(!state[key].need) return;
-      state[key].tier = (state[key].tier === tier) ? null : tier;
-      render();
-      saveState();
-    });
-  });
-
-  updateTotals();
+  bindEvents();
+  updateHeader();
+  updateBell();
 }
 
-function updateTotals(){
-  let totLow=0, totMid=0, totHigh=0, totPicked=0;
-  data.forEach(sec=>sec.items.forEach(it=>{
-    const key = id(sec.room, it.name);
-    const st = state[key];
-    if(!st.need) return;
-    totLow += it.low;
-    totMid += it.mid;
-    totHigh += it.high;
-    if(st.tier) totPicked += it[st.tier];
-  }));
-  document.getElementById('tot-low').textContent = '$'+totLow.toLocaleString();
-  document.getElementById('tot-mid').textContent = '$'+totMid.toLocaleString();
-  document.getElementById('tot-high').textContent = '$'+totHigh.toLocaleString();
-  document.getElementById('tot-picked').textContent = '$'+totPicked.toLocaleString();
+function bindEvents(){
+  document.querySelectorAll('[data-field]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.field;
+      const t = tasks.find(x=>x.id===id);
+      if(!t) return;
+      const oldVal = t[field];
+      let newVal;
+      if(field==='budget' || field==='actual'){
+        newVal = parseFloat(e.target.value)||0;
+      } else {
+        newVal = e.target.value;
+      }
+      if(String(oldVal) !== String(newVal)){
+        t[field] = newVal;
+        pushLog({ taskId:t.id, zone:t.zone, task:t.task, field, from:oldVal, to:newVal });
+      }
+      render();
+      saveTasks();
+    });
+  });
+  document.querySelectorAll('[data-act]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const id = e.currentTarget.dataset.id;
+      const act = e.currentTarget.dataset.act;
+      if(act==='del'){
+        if(!confirm('Удалить позицию?')) return;
+        const t = tasks.find(x=>x.id===id);
+        if(t) pushLog({ kind:'delete', taskId:t.id, zone:t.zone, task:t.task });
+        tasks = tasks.filter(x=>x.id!==id);
+      } else {
+        const t = tasks.find(x=>x.id===id);
+        if(t){
+          t[act] = !t[act];
+          pushLog({ taskId:t.id, zone:t.zone, task:t.task, field:act, from:!t[act], to:t[act] });
+        }
+      }
+      render();
+      saveTasks();
+    });
+  });
 }
 
-function resetAll(){
-  if(!confirm('Сбросить весь выбор? Это удалит и сохранённые данные.')) return;
-  state = defaultState();
+function updateHeader(){
+  const sumBudget = tasks.reduce((s,t)=>s+(+t.budget||0),0);
+  const sumActual = tasks.reduce((s,t)=>s+(+t.actual||0),0);
+  const diff = sumActual - sumBudget;
+  document.getElementById('sumBudget').textContent = '$'+sumBudget.toLocaleString();
+  document.getElementById('sumActual').textContent = '$'+sumActual.toLocaleString();
+  const diffEl = document.getElementById('sumDiff');
+  diffEl.textContent = (diff>0?'+':'') + '$'+diff.toLocaleString();
+  diffEl.className = diff>0 ? 'over' : (diff<0 ? 'under' : '');
+
+  const total = tasks.length;
+  const done = tasks.filter(t=>t.status==='Готово').length;
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('doneCount').textContent = done;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('donePct').textContent = pct;
+  document.getElementById('progressfill').style.width = pct+'%';
+}
+
+window.addTask = function(){
+  const zone = document.getElementById('newZone').value;
+  const name = document.getElementById('newTask').value.trim();
+  if(!name) return;
+  const newId = zone+'|'+name+'|'+Date.now();
+  tasks.push({
+    id: newId, zone, task:name, budget:0, actual:0,
+    status:"Не начато", resp:"", contact:"", deadline:"", notes:"", urgent:false, blocked:false
+  });
+  pushLog({ kind:'add', taskId:newId, zone, task:name });
+  document.getElementById('newTask').value = '';
   render();
-  saveState();
+  saveTasks();
 }
 
-function exportPicks(){
-  const tierLabel = {low:'Low', mid:'Mid', high:'Modern Miami'};
-  let lines = [];
-  let total = 0;
-  data.forEach(sec=>{
-    let secLines = [];
-    sec.items.forEach(it=>{
-      const key = id(sec.room, it.name);
-      const st = state[key];
-      if(!st.need || !st.tier) return;
-      const price = it[st.tier];
-      total += price;
-      secLines.push(`${it.name}\t${tierLabel[st.tier]}\t$${price}`);
-    });
-    if(secLines.length){
-      lines.push(`# ${sec.room}`);
-      lines = lines.concat(secLines);
+window.exportJSON = function(){
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'oasis-hallandale-tracker-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.importJSON = function(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error('bad format');
+      if(!confirm('Заменить текущие данные импортированными?')) return;
+      tasks = parsed;
+      render();
+      saveTasks();
+    }catch(err){
+      alert('Не удалось прочитать файл — проверь формат JSON.');
     }
-  });
-  lines.push('');
-  lines.push(`ИТОГО\t\t$${total.toLocaleString()}`);
-  const text = lines.join('\n');
-
-  const box = document.getElementById('exportbox');
-  const area = document.getElementById('exportarea');
-  area.value = text;
-  box.style.display = 'block';
-  area.focus();
-  area.select();
-
-  try{
-    document.execCommand('copy');
-    document.getElementById('status').textContent = 'скопировано в буфер ✓';
-  }catch(e){
-    document.getElementById('status').textContent = 'выдели текст ниже вручную и скопируй';
-  }
-  setTimeout(()=>{ document.getElementById('status').textContent=''; }, 2500);
+  };
+  reader.readAsText(file);
 }
 
-window.resetAll = resetAll;
-window.exportPicks = exportPicks;
-
-loadState();
+initFilters();
+loadTasks();
 </script>
 
 </body>
