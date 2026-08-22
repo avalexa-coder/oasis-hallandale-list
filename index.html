@@ -20,7 +20,8 @@
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'Georgia','Times New Roman',serif;-webkit-font-smoothing:antialiased;padding-bottom:70px;}
   a{color:inherit;}
 
-  header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding:14px 16px 10px;}
+  header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;}
+  .toppanel{background:var(--bg);padding:0 0 4px;}
   .h-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
   h1{font-size:1.25rem;margin:0;letter-spacing:0.01em;color:var(--ink);}
   .sync{font-family:Arial,sans-serif;font-size:0.68rem;display:flex;align-items:center;gap:5px;color:var(--dim);white-space:nowrap;}
@@ -120,6 +121,11 @@
   }
   .flags span.on{background:var(--accent);color:#1a1a17;border-color:var(--accent);}
   .task-name{font-size:0.95rem;flex:1;color:var(--ink);}
+  .zone-tag{
+    font-family:Arial,sans-serif;font-size:0.6rem;color:var(--dim);border:1px solid var(--line);
+    border-radius:5px;padding:2px 6px;margin-left:8px;text-transform:uppercase;letter-spacing:0.03em;
+    vertical-align:middle;
+  }
   .del{cursor:pointer;color:var(--dim);font-family:Arial,sans-serif;font-size:0.85rem;}
   .del:hover{color:var(--red);}
 
@@ -198,7 +204,9 @@
       <div class="sync"><span class="dot" id="syncdot"></span><span id="syncstatus">…</span></div>
     </div>
   </div>
+</header>
 
+<div class="toppanel">
   <div class="budgetbar">
     <div>Бюджет<b id="sumBudget">$0</b></div>
     <div>Факт<b id="sumActual">$0</b></div>
@@ -245,7 +253,7 @@
     <input id="newTask" placeholder="Название новой позиции">
     <button onclick="addTask()">ADD</button>
   </div>
-</header>
+</div>
 
 <div id="app"></div>
 
@@ -532,6 +540,7 @@ function toggleChip(key){
   render();
 }
 window.toggleChip = toggleChip;
+window.render = render;
 
 function filtered(){
   const fs = document.getElementById('fStatus').value;
@@ -569,13 +578,75 @@ function isOverdue(t){
   return new Date(t.deadline) < new Date(new Date().toDateString());
 }
 
+function buildCardHTML(t, showZoneTag){
+  return `
+    <div class="card-row1">
+      <div class="flags">
+        <span class="icon-btn ${t.urgent?'on':''}" data-act="urgent" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></svg>Срочно</span>
+        <span class="icon-btn ${t.blocked?'on':''}" data-act="blocked" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Блок</span>
+      </div>
+      <div class="task-name">${t.task}${showZoneTag ? `<span class="zone-tag">${t.zone}</span>` : ''}</div>
+      <div class="archive" data-act="archive" data-id="${t.id}">В архив</div>
+      <div class="del" data-act="del" data-id="${t.id}">✕</div>
+    </div>
+    <div class="card-row">
+      <div><span class="fieldlabel">Статус</span>
+        <div class="status-field">
+          <span class="status-dot" style="background:${statusColor(t.status)}"></span>
+          <select data-field="status" data-id="${t.id}">
+            ${["Не начато","В ожидании","В процессе","Готово","Отменено"].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div><span class="fieldlabel">Ответственный</span>
+        <select data-field="resp" data-id="${t.id}">
+          <option value="" ${!t.resp?'selected':''}>—</option>
+          ${["Алекса","Серёжа","Мастер"].map(r=>`<option ${t.resp===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="card-row">
+      <div><span class="fieldlabel">Бюджет $</span><input type="number" data-field="budget" data-id="${t.id}" value="${t.budget}"></div>
+      <div><span class="fieldlabel">Факт $</span><input type="number" data-field="actual" data-id="${t.id}" value="${t.actual}"></div>
+    </div>
+    <div class="card-row">
+      <div><span class="fieldlabel">Поставщик / ссылка</span><input type="text" data-field="contact" data-id="${t.id}" value="${t.contact||''}"></div>
+      <div><span class="fieldlabel">Дедлайн</span><input type="date" data-field="deadline" data-id="${t.id}" value="${t.deadline||''}" class="${isOverdue(t)?'overdue':''}"></div>
+    </div>
+    <div style="margin-top:8px;">
+      <span class="fieldlabel">Notes</span>
+      <textarea data-field="notes" data-id="${t.id}">${t.notes||''}</textarea>
+    </div>
+    ${lastChangeFor(t.id) ? `<div class="changed-by">изменил(а) ${lastChangeFor(t.id).who} · ${timeAgo(lastChangeFor(t.id).time)}</div>` : ''}
+  `;
+}
+
+function buildCardEl(t, showZoneTag){
+  const card = document.createElement('div');
+  let cls = 'card ' + statusClass(t.status);
+  if(t.blocked) cls+=' blocked';
+  if(t.urgent) cls+=' urgent';
+  if(t.status==='Готово') cls+=' done';
+  if(t.status==='Отменено') cls+=' cancelled';
+  card.className = cls;
+  card.innerHTML = buildCardHTML(t, showZoneTag);
+  return card;
+}
+
 function render(){
   const app = document.getElementById('app');
   app.innerHTML = '';
   const list = filtered();
+  const STATUS_RANK = {"В процессе":0,"В ожидании":1,"Не начато":2};
+
+  const activeItems = list.filter(t=>t.status!=='Готово' && t.status!=='Отменено');
+  const finishedItems = list.filter(t=>t.status==='Готово' || t.status==='Отменено');
 
   ZONES.forEach(zone=>{
-    const zoneTasks = list.filter(t=>t.zone===zone);
+    const zoneTasks = activeItems.filter(t=>t.zone===zone)
+      .map((t,i)=>({t,i}))
+      .sort((a,b)=> (STATUS_RANK[a.t.status]??2) - (STATUS_RANK[b.t.status]??2) || a.i-b.i)
+      .map(x=>x.t);
     if(!zoneTasks.length) return;
 
     const zb = tasks.filter(t=>t.zone===zone).reduce((s,t)=>s+(+t.budget||0),0);
@@ -586,58 +657,18 @@ function render(){
     zoneDiv.innerHTML = `<div class="zone-head"><span class="zone-title">${zone}</span><span class="zone-sub">Бюджет $${zb.toLocaleString()} · Факт $${za.toLocaleString()}</span></div>`;
     app.appendChild(zoneDiv);
 
-    zoneTasks.forEach(t=>{
-      const card = document.createElement('div');
-      let cls = 'card ' + statusClass(t.status);
-      if(t.blocked) cls+=' blocked';
-      if(t.urgent) cls+=' urgent';
-      if(t.status==='Готово') cls+=' done';
-      if(t.status==='Отменено') cls+=' cancelled';
-      card.className = cls;
-
-      card.innerHTML = `
-        <div class="card-row1">
-          <div class="flags">
-            <span class="icon-btn ${t.urgent?'on':''}" data-act="urgent" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></svg>Срочно</span>
-            <span class="icon-btn ${t.blocked?'on':''}" data-act="blocked" data-id="${t.id}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Блок</span>
-          </div>
-          <div class="task-name">${t.task}</div>
-          <div class="archive" data-act="archive" data-id="${t.id}">В архив</div>
-          <div class="del" data-act="del" data-id="${t.id}">✕</div>
-        </div>
-        <div class="card-row">
-          <div><span class="fieldlabel">Статус</span>
-            <div class="status-field">
-              <span class="status-dot" style="background:${statusColor(t.status)}"></span>
-              <select data-field="status" data-id="${t.id}">
-                ${["Не начато","В ожидании","В процессе","Готово","Отменено"].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-          <div><span class="fieldlabel">Ответственный</span>
-            <select data-field="resp" data-id="${t.id}">
-              <option value="" ${!t.resp?'selected':''}>—</option>
-              ${["Алекса","Серёжа","Мастер"].map(r=>`<option ${t.resp===r?'selected':''}>${r}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="card-row">
-          <div><span class="fieldlabel">Бюджет $</span><input type="number" data-field="budget" data-id="${t.id}" value="${t.budget}"></div>
-          <div><span class="fieldlabel">Факт $</span><input type="number" data-field="actual" data-id="${t.id}" value="${t.actual}"></div>
-        </div>
-        <div class="card-row">
-          <div><span class="fieldlabel">Поставщик / ссылка</span><input type="text" data-field="contact" data-id="${t.id}" value="${t.contact||''}"></div>
-          <div><span class="fieldlabel">Дедлайн</span><input type="date" data-field="deadline" data-id="${t.id}" value="${t.deadline||''}" class="${isOverdue(t)?'overdue':''}"></div>
-        </div>
-        <div style="margin-top:8px;">
-          <span class="fieldlabel">Notes</span>
-          <textarea data-field="notes" data-id="${t.id}">${t.notes||''}</textarea>
-        </div>
-        ${lastChangeFor(t.id) ? `<div class="changed-by">изменил(а) ${lastChangeFor(t.id).who} · ${timeAgo(lastChangeFor(t.id).time)}</div>` : ''}
-      `;
-      zoneDiv.appendChild(card);
-    });
+    zoneTasks.forEach(t=> zoneDiv.appendChild(buildCardEl(t, false)));
   });
+
+  if(finishedItems.length){
+    const fb = finishedItems.reduce((s,t)=>s+(+t.budget||0),0);
+    const fa = finishedItems.reduce((s,t)=>s+(+t.actual||0),0);
+    const doneDiv = document.createElement('div');
+    doneDiv.className = 'zone';
+    doneDiv.innerHTML = `<div class="zone-head"><span class="zone-title">ГОТОВО / ОТМЕНЕНО</span><span class="zone-sub">Бюджет $${fb.toLocaleString()} · Факт $${fa.toLocaleString()}</span></div>`;
+    app.appendChild(doneDiv);
+    finishedItems.forEach(t=> doneDiv.appendChild(buildCardEl(t, true)));
+  }
 
   bindEvents();
   updateHeader();
